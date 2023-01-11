@@ -10,16 +10,16 @@ flowchart TD
     BUILD[Build source code] --> DID_BUILD_PASS
     DID_BUILD_PASS{Did build\npass?} -- Yes --> IS_BUILD_ONLY
     DID_BUILD_PASS -- No --> ERROR
-    IS_BUILD_ONLY{twister_config.\nbuild_only} -- True --> DO_NOT_EXECUTE[Do not execute]
-    IS_BUILD_ONLY -- False --> IS_DEVICE_TESTING{"twister_config.\ndevice_testing"}
-    IS_DEVICE_TESTING -- True --> IS_TYPE_MCU{platform.\ntype == mcu}
-    IS_DEVICE_TESTING -- False --> RUNNABLE{specification.\nrunnable}
-    IS_TYPE_MCU -- False --> DO_NOT_EXECUTE
-    IS_TYPE_MCU -- True --> RUNNABLE
-    RUNNABLE -->|False| DO_NOT_EXECUTE
-    RUNNABLE -->|True| EXECUTE[Execute]
-    DO_NOT_EXECUTE --> IS_PYTEST
-    IS_PYTEST{Is pytest test?} -->|Yes| SKIP[SKIPPED]
+    IS_BUILD_ONLY{twister_config.\nbuild_only} -- Yes --> DO_NOT_EXECUTE
+    IS_BUILD_ONLY -- No --> IS_TYPE_MCU
+    IS_DEVICE_TESTING{"twister_config.\ndevice_testing"} -- No --> DO_NOT_EXECUTE
+    IS_DEVICE_TESTING -- Yes --> IS_RUNNABLE
+    IS_TYPE_MCU{platform.\ntype == 'mcu'} -- No --> IS_RUNNABLE
+    IS_TYPE_MCU -- Yes --> IS_DEVICE_TESTING
+    IS_RUNNABLE{specification.\nrunnable} -->|No| DO_NOT_EXECUTE
+    IS_RUNNABLE -->|Yes| EXECUTE[Execute]
+    DO_NOT_EXECUTE[Do not execute] --> IS_PYTEST
+    IS_PYTEST{Is pytest test?} -- Yes --> SKIP[SKIPPED]
     IS_PYTEST -->|No| PASSED[PASSED]
     EXECUTE --> DID_TEST_PASS{Did test pass?}
     DID_TEST_PASS -- Yes --> PASSED
