@@ -10,7 +10,7 @@ flowchart TD
     BUILD[Build source code] --> DID_BUILD_PASS
     DID_BUILD_PASS{Did build\npass?} -- Yes --> IS_BUILD_ONLY
     DID_BUILD_PASS -- No --> ERROR
-    IS_BUILD_ONLY{twister_config.\nbuild_only} -- Yes --> DO_NOT_EXECUTE
+    IS_BUILD_ONLY{twister_config.\nbuild_only\nor\nspecification.\nbuild_only} -- Yes --> DO_NOT_EXECUTE
     IS_BUILD_ONLY -- No --> IS_TYPE_MCU
     IS_DEVICE_TESTING{"twister_config.\ndevice_testing"} -- No --> DO_NOT_EXECUTE
     IS_DEVICE_TESTING -- Yes --> IS_RUNNABLE
