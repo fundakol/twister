@@ -47,6 +47,8 @@ class ZtestLogParser(LogParserAbstract):
 
     def parse(self, timeout: float = 60) -> None:
         """Parse logs and create list of subtests with statuses."""
+        __tracebackhide__ = True
+        
         end_time = time.time() + timeout
         while self.stream:
             if time.time() > end_time:

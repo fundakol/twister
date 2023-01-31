@@ -107,6 +107,8 @@ class BuildManager:
         """
         Build source code.
         """
+        __tracebackhide__ = True
+        
         status: str = self.get_status()
         if status == BuildStatus.NOT_DONE:
             if self.update_status(BuildStatus.IN_PROGRESS):

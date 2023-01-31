@@ -49,6 +49,8 @@ class ConsoleLogParser(LogParserAbstract):
             raise TwisterHarnessParserException('Unknown harness_config type')
 
     def parse(self, timeout: float = 60) -> None:
+        __tracebackhide__ = True
+        
         logger.debug('%s: Parsing output', self.__class__.__name__)
         end_time = time.time() + timeout
         while self.stream:
