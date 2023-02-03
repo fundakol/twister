@@ -50,7 +50,7 @@ def test_if_pytest_generate_testplan_csv(pytester, copy_example, extra_args) -> 
 
 
 @pytest.mark.parametrize('extra_args', ['-n 0', '-n 2'], ids=['no_xdist', 'xdist'])
-def test_if_pytest_generates_json_results_with_expected_data(pytester, extra_args, mock_report) -> None:
+def test_if_pytest_generates_json_results_with_expected_data(pytester, extra_args) -> None:
     test_file_content = textwrap.dedent("""\
         import pytest
 
@@ -88,11 +88,15 @@ def test_if_pytest_generates_json_results_with_expected_data(pytester, extra_arg
     test_file.write_text(test_file_content)
     output_result: Path = pytester.path / 'result.json'
 
-    result = pytester.runpytest(
-        f'--zephyr-base={str(pytester.path)}',
-        f'--results-json={output_result}',
-        extra_args
-    )
+    with mock.patch('twister2.report.test_results_plugin.TestResultsPlugin._get_environment') as mocked_object2:
+        mocked_object2.return_value = {
+            'dummy_key': 'dummy_key'
+        }
+        result = pytester.runpytest(
+            f'--zephyr-base={str(pytester.path)}',
+            f'--results-json={output_result}',
+            extra_args
+        )
 
     result.assert_outcomes(passed=2, failed=3, errors=1, xfailed=1, xpassed=1, skipped=1)
     assert output_result.is_file()
@@ -130,4 +134,4 @@ def test_if_pytest_generates_json_results_with_expected_data(pytester, extra_arg
         'subtests_failed': 2,
         'subtests_skipped': 0
     }
-    assert report_data['environment'] == mock_report.return_value
+    assert report_data['environment'] == mocked_object2.return_value
