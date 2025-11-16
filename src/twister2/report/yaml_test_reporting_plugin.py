@@ -5,7 +5,7 @@ tests and subtests (testcases) when verbosity >=2."""
 from __future__ import annotations
 
 import pytest
-from pytest_subtests import SubTestReport
+from pytest_subtests.plugin import SubTestReport
 
 
 @pytest.hookimpl(tryfirst=True)
@@ -44,7 +44,7 @@ def pytest_report_teststatus(report, config):
         # We only want to see subtests' status in the console if verbosity > 1."""
         # This removes the substatuses from console outputs if verbosity <= 1
         if config.option.verbose <= 1:
-            for key in output_formating.keys():
+            for key in output_formating:
                 output_formating[key][1] = ''
                 output_formating[key][2] = ''
 
