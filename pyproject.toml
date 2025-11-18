@@ -80,5 +80,11 @@ line_length = 88
 ignore_missing_imports = true
 exclude = ["parsetab.py"]
 
+[tool.ruff]
+line-length = 120
+
+[tool.ruff.format]
+quote-style = "single"
+
 [tool.setuptools.dynamic]
 version = { attr = "twister2.__version__" }
