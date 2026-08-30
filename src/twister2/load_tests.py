@@ -6,9 +6,9 @@ from __future__ import annotations
 
 import json
 import logging
+from collections.abc import Generator
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Generator
 
 import pytest
 
@@ -23,6 +23,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class LoadedTestData:
     """Keep data loaded from testplan required to generate test item"""
+
     testfile: Path = Path('.')
     testname: str = ''
     platform: str = ''
@@ -36,15 +37,17 @@ class LoadedTestData:
             test_data = json.load(file)
         for ts in test_data['testsuites']:
             if 'nodeid' in ts and '.py::' in ts['nodeid']:
-                logger.debug('Not supported for regular python tests: %s' % ts['nodeid'])
+                logger.debug('Not supported for regular python tests: %s', ts['nodeid'])
                 continue
             testdir, testname = ts['name'].rsplit('/', 1)
             testfile = Path(testdir) / 'testcase.yaml'
             if not testfile.exists():
                 testfile = Path(testdir) / 'sample.yaml'
                 if not testfile.exists():
-                    logger.info(f'Not found yaml test file in {testdir}')
-                    continue
+                    testfile = Path(testdir) / 'tests.yaml'
+                    if not testfile.exists():
+                        logger.info(f'Not found yaml test file in {testdir}')
+                        continue
             yield LoadedTestData(
                 testfile=testfile,
                 testname=testname,
@@ -82,11 +85,8 @@ def collect_tests_from_testplan(twister_config: TwisterConfig, session) -> Gener
 
 
 class LoadTestPlugin:
-
     @pytest.hookimpl(tryfirst=True)
-    def pytest_collection_modifyitems(
-        self, session: pytest.Session, config: pytest.Config, items: list[pytest.Item]
-    ):
+    def pytest_collection_modifyitems(self, session: pytest.Session, config: pytest.Config, items: list[pytest.Item]):
         if not config.twister_config.load_tests_path:  # type: ignore
             return
 
