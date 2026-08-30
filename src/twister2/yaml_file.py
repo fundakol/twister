@@ -4,11 +4,12 @@ Module is responsible for searching and parsing yaml files, and generating test 
 Base of non-python test definition:
 https://github.com/pytest-dev/pytest/issues/3639
 """
+
 from __future__ import annotations
 
 import logging
+from collections.abc import Generator
 from pathlib import Path
-from typing import Generator
 
 import pytest
 
@@ -19,29 +20,27 @@ from twister2.yaml_test_specification import YamlTestSpecification
 
 SAMPLE_FILENAME: str = 'sample.yaml'
 TESTCASE_FILENAME: str = 'testcase.yaml'
+TESTS_FILENAME: str = 'tests.yaml'
+VALID_YAML_FILENAMES: tuple[str, ...] = (SAMPLE_FILENAME, TESTCASE_FILENAME, TESTS_FILENAME)
 
 logger = logging.getLogger(__name__)
 
 
-class YamlPytestPlugin():
-
+class YamlPytestPlugin:
     def pytest_collect_file(self, parent, path):
         # discovers all yaml tests in test directory
-        if path.basename in (SAMPLE_FILENAME, TESTCASE_FILENAME):
+        if path.basename in VALID_YAML_FILENAMES:
             return YamlModule.from_parent(parent, path=Path(path))
 
     def pytest_ignore_collect(self, path, config):
         if config.option.load_tests_path:
             return True
         elif config.option.only_from_yaml:
-            if path.basename not in (SAMPLE_FILENAME, TESTCASE_FILENAME):
+            if path.basename not in VALID_YAML_FILENAMES:
                 return True
         return False
 
-    def pytest_collection_modifyitems(
-        self,
-        session: pytest.Session, config: pytest.Config, items: list[pytest.Item]
-    ):
+    def pytest_collection_modifyitems(self, session: pytest.Session, config: pytest.Config, items: list[pytest.Item]):
         if not hasattr(session, 'specifications'):
             session.specifications = {}  # type: ignore[attr-defined]
 

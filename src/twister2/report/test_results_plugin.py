@@ -13,7 +13,7 @@ from datetime import datetime, timezone
 from typing import Sequence
 
 import pytest
-from pytest_subtests import SubTestReport
+from pytest_subtests.plugin import SubTestReport
 
 from twister2.environment.environment import get_toolchain_version, get_zephyr_repo_info
 from twister2.report.base_report_writer import BaseReportWriter
@@ -249,7 +249,7 @@ class TestResultsPlugin:
         )
 
     def _merge_with_load_tests_data(self, data: dict, load_tests_path: str) -> dict:
-        with open(load_tests_path, 'r') as fp:
+        with open(load_tests_path) as fp:
             load_data = json.load(fp)
         test_list: list = []
         for ts in load_data['testsuites']:

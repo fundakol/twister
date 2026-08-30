@@ -35,6 +35,7 @@ class Testing:
 @dataclass
 class PlatformSpecification:
     """Store platform configuration."""
+
     identifier: str = ''  # platform name
     name: str = ''  # long name
     twister: bool = True
@@ -50,6 +51,9 @@ class PlatformSpecification:
     env_satisfied: bool = True
     filter_data: dict = field(default_factory=dict)
     testing: Testing = field(default_factory=Testing)
+    vendor: str = ''
+    sysbuild: bool = False
+    variants: list = field(default_factory=list)
 
     def __post_init__(self):
         self.supported = set(self.supported)
@@ -79,9 +83,7 @@ class PlatformSpecification:
 
 
 # Using marshmallow schema definition for validation of data read from yaml
-_validate_type = validate.OneOf(
-    ['mcu', 'qemu', 'sim', 'unit', 'native']
-)
+_validate_type = validate.OneOf(['mcu', 'qemu', 'sim', 'unit', 'native'])
 _validate_simulation = validate.OneOf(
     ['qemu', 'simics', 'xt-sim', 'renode', 'nsim', 'mdb-nsim', 'tsim', 'armfvp', 'native']
 )
@@ -105,13 +107,16 @@ class PlatformSchema(Schema):
     supported = fields.List(fields.Str())
     arch = fields.Str()
     type = fields.Str(validate=_validate_type)
-    simulation = fields.Str(validate=_validate_simulation)
+    simulation = fields.List(fields.Dict())
     simulation_exec = fields.Str()
     toolchain = fields.List(fields.Str())
     env = fields.List(fields.Str())
     env_satisfied = fields.Bool()
     filter_data = fields.Dict()
     testing = fields.Nested(TestingSchema())
+    vendor = fields.Str()
+    sysbuild = fields.Bool()
+    variants = fields.List(fields.List(fields.Str()))
 
 
 def discover_platforms(directory: Path) -> Generator[PlatformSpecification, None, None]:
@@ -120,7 +125,7 @@ def discover_platforms(directory: Path) -> Generator[PlatformSpecification, None
         try:
             platform = PlatformSpecification.load_from_yaml(str(spec_file))
         except Exception as e:
-            logger.exception('Cannot read platform definition from yaml: %s', e)
+            logger.exception('Cannot read platform definition from "%s": %s', spec_file, e)
             raise
         yield platform
         if '@' not in platform.identifier:
@@ -145,7 +150,7 @@ def discover_platform_revisions(
         # Need to make sure the revision matches
         # the permitted patterns as described in
         # cmake/modules/extensions.cmake.
-        pattern_to_match = r'{}_(?P<revision>{})\.conf'.format(platform.identifier, revision_pattern)
+        pattern_to_match = rf'{platform.identifier}_(?P<revision>{revision_pattern})\.conf'
         if match := re.match(pattern_to_match, file):
             revision: str = match.group('revision')
             if f'{platform.identifier}_{revision}.yaml' not in files_list:
@@ -171,9 +176,7 @@ def validate_platforms_list(platforms: list[PlatformSpecification]) -> None:
 
 
 def search_platforms(
-    zephyr_base: str,
-    board_root: str | None = None,
-    default_only: bool = False
+    zephyr_base: str, board_root: str | None = None, default_only: bool = False
 ) -> list[PlatformSpecification]:
     """
     Return list of platforms.

@@ -439,7 +439,7 @@ def store_load_tests_file_content(config: pytest.Config) -> None | str:
         return None
     load_tests = Path(config.option.load_tests_path)
     if str(load_tests.parent) == config.option.output_dir:
-        with open(load_tests, 'r') as fp:
+        with open(load_tests) as fp:
             return fp.read()
     return None
 
@@ -458,7 +458,7 @@ def _normalize_path(path: str | Path) -> str:
     return path
 
 
-class TwisterExtPlugin():
+class TwisterExtPlugin:
 
     def pytest_runtest_setup(self, item: pytest.Item) -> None:
         # extend JUnitXML report for user properties
@@ -479,7 +479,7 @@ class TwisterExtPlugin():
         outcome = yield
         report = outcome.get_result()
         if report.failed:
-            setattr(item, '_test_failed', True)
+            item._test_failed = True
         return report
 
 
